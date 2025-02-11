@@ -122,10 +122,10 @@ class CategoryController extends Controller
         }
     }
 
-    public function destroy(Category $category)
+    public function destroy($id)
     {
         try {
-            $category_data = $this->categoryService->delete($category);
+            $category_data = $this->categoryService->delete($id);
             if ($category_data) {
                 return response()->json([
                     'status' => true,

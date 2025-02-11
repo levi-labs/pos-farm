@@ -34,8 +34,16 @@ class CategoryService
         return false;
     }
 
-    public function delete(Category $category)
+    public function delete($id)
     {
-        return $category->delete();
+        $category =  Category::find($id);
+
+        if ($category) {
+            $category->delete();
+
+            return true;
+        }
+
+        return false;
     }
 }
