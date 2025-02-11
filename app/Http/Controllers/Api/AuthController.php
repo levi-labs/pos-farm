@@ -14,7 +14,7 @@ class AuthController extends Controller
     public function userInfo()
     {
         try {
-            $user = auth('api')->user();
+            $user = auth('sanctum')->user();
             return response()->json([
                 'status' => true,
                 'message' => 'User info fetched successfully',
@@ -47,5 +47,21 @@ class AuthController extends Controller
             'token' => $token,
             'expires_at' => $expiresAt,
         ], 200);
+    }
+    public function logout(Request $request)
+    {
+        try {
+            $request->user()->currentAccessToken()->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'User logged out successfully',
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
     }
 }

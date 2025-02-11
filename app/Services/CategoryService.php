@@ -12,9 +12,9 @@ class CategoryService
         return Category::all();
     }
 
-    public function getById(Category $category)
+    public function getById($id)
     {
-        return Category::findOrFail($category);
+        return Category::find($id);
     }
 
     public function create(Request $request)
@@ -22,9 +22,16 @@ class CategoryService
         return Category::create($request->all());
     }
 
-    public function update(Request $request, Category $category)
+    public function update(Request $request, $id)
     {
-        return $category->update($request->all());
+        $category = Category::find($id);
+
+        if ($category) {
+            $category->update($request->all());
+            return $category;
+        }
+
+        return false;
     }
 
     public function delete(Category $category)

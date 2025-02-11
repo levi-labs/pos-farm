@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Services\CategoryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
@@ -21,8 +22,8 @@ class CategoryController extends Controller
         try {
             return response()->json([
                 'status' => true,
-                'data' => $this->categoryService->getAll(),
                 'message' => 'Categories fetched successfully',
+                'data' => $this->categoryService->getAll(),
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -31,15 +32,23 @@ class CategoryController extends Controller
             ], 500);
         }
     }
-    public function show(Category $category)
+    public function show($id)
     {
         try {
-            $category = $this->categoryService->getById($category);
-            return response()->json([
-                'status' => true,
-                'data' => $category,
-                'message' => 'Category fetched successfully',
-            ], 200);
+            // dd($id);
+            $category = $this->categoryService->getById($id);
+            if ($category) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Category fetched successfully',
+                    'data' => $category,
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'error' => 'Category not found',
+                ], 404);
+            }
         } catch (\Throwable $th) {
             //throw $th;            
             return response()->json([
@@ -51,6 +60,18 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'description' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'error' => $validator->errors()->toArray()
+            ], 422);
+        }
+
         try {
             return response()->json([
                 'status' => true,
@@ -67,6 +88,18 @@ class CategoryController extends Controller
 
     public function update(Request $request, $id)
     {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'description' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'error' => $validator->errors()->toArray()
+            ], 422);
+        }
+
         try {
             $category = $this->categoryService->update($request, $id);
             if ($category) {
