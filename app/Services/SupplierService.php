@@ -12,9 +12,13 @@ class SupplierService
         return Supplier::all();
     }
 
-    public function getById(Supplier $supplier)
+    public function getById($id)
     {
-        return Supplier::find($supplier->id);
+        $supplier = Supplier::find($id);
+        if (!$supplier) {
+            return false;
+        }
+        return $supplier;
     }
 
     public function create(Request $request)
@@ -22,13 +26,21 @@ class SupplierService
         return Supplier::create($request->all());
     }
 
-    public function update(Request $request, Supplier $supplier)
+    public function update(Request $request, $id)
     {
+        $supplier = Supplier::find($id);
+        if (!$supplier) {
+            return false;
+        }
         return $supplier->update($request->all());
     }
 
-    public function delete(Supplier $supplier)
+    public function delete($id)
     {
+        $supplier = Supplier::find($id);
+        if (!$supplier) {
+            return false;
+        }
         return $supplier->delete();
     }
 }

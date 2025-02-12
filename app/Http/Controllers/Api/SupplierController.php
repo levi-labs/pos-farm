@@ -25,10 +25,10 @@ class SupplierController extends Controller
         ], 200);
     }
 
-    public function show(Supplier $supplier)
+    public function show($id)
     {
         try {
-            $supplier = $this->supplierService->getById($supplier);
+            $supplier = $this->supplierService->getById($id);
             if ($supplier) {
                 return response()->json([
                     'status' => true,
@@ -64,10 +64,10 @@ class SupplierController extends Controller
         }
     }
 
-    public function update(Request $request, Supplier $supplier)
+    public function update(Request $request, $id)
     {
         try {
-            $supplier = $this->supplierService->update($request, $supplier);
+            $supplier = $this->supplierService->update($request, $id);
             if ($supplier) {
                 return response()->json([
                     'status' => true,
