@@ -29,18 +29,20 @@ class SupplierService
     public function update(Request $request, $id)
     {
         $supplier = Supplier::find($id);
-        if (!$supplier) {
-            return false;
+
+        if ($supplier) {
+            $supplier->update($request->all());
+            return $supplier;
         }
-        return $supplier->update($request->all());
+        return false;
     }
 
     public function delete($id)
     {
         $supplier = Supplier::find($id);
-        if (!$supplier) {
-            return false;
+        if ($supplier) {
+            return $supplier->delete();
         }
-        return $supplier->delete();
+        return false;
     }
 }

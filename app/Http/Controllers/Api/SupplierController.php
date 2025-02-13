@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Supplier;
 use App\Services\SupplierService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class SupplierController extends Controller
 {
@@ -20,8 +21,8 @@ class SupplierController extends Controller
     {
         return response()->json([
             'status' => true,
-            'data' => $this->supplierService->getAll(),
             'message' => 'Suppliers fetched successfully',
+            'data' => $this->supplierService->getAll(),
         ], 200);
     }
 
@@ -32,8 +33,8 @@ class SupplierController extends Controller
             if ($supplier) {
                 return response()->json([
                     'status' => true,
-                    'data' => $supplier,
                     'message' => 'Supplier fetched successfully',
+                    'data' => $supplier,
                 ], 200);
             }
             return response()->json([
@@ -50,15 +51,31 @@ class SupplierController extends Controller
 
     public function store(Request $request)
     {
+        $validated = Validator::make($request->all(), [
+            'name' => 'required',
+            'phone' => 'required',
+            'address' => 'required',
+            'description' => 'required',
+            'email' => 'required',
+        ]);
+
+        if ($validated->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'error' => $validated->errors()->toArray(),
+            ], 422);
+        }
         try {
             return response()->json([
                 'status' => true,
-                'data' => $this->supplierService->create($request),
                 'message' => 'Supplier created successfully',
+                'data' => $this->supplierService->create($request),
             ], 201);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
+                'message' => 'Supplier created failed',
                 'error' => $th->getMessage(),
             ], 500);
         }
@@ -87,10 +104,10 @@ class SupplierController extends Controller
         }
     }
 
-    public function destroy(Supplier $supplier)
+    public function destroy($id)
     {
         try {
-            $supplier_data = $this->supplierService->delete($supplier);
+            $supplier_data = $this->supplierService->delete($id);
             if ($supplier_data) {
                 return response()->json([
                     'status' => true,

@@ -68,6 +68,7 @@ class CategoryController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
+                'message' => 'Validation failed',
                 'error' => $validator->errors()->toArray()
             ], 422);
         }
@@ -96,6 +97,7 @@ class CategoryController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
+                'message' => 'Validation failed',
                 'error' => $validator->errors()->toArray()
             ], 422);
         }

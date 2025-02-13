@@ -16,3 +16,9 @@ Route::get('/categories/{id}', [App\Http\Controllers\Api\CategoryController::cla
 Route::post('/categories', [App\Http\Controllers\Api\CategoryController::class, 'store'])->middleware('auth:sanctum');
 Route::put('/categories/{id}', [App\Http\Controllers\Api\CategoryController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/categories/{id}', [App\Http\Controllers\Api\CategoryController::class, 'destroy'])->middleware('auth:sanctum');
+
+Route::get('/suppliers', [App\Http\Controllers\Api\SupplierController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/suppliers/{id}', [App\Http\Controllers\Api\SupplierController::class, 'show'])->middleware('auth:sanctum');
+Route::post('/suppliers', [App\Http\Controllers\Api\SupplierController::class, 'store'])->middleware('auth:sanctum');
+Route::put('/suppliers/{id}', [App\Http\Controllers\Api\SupplierController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/suppliers/{id}', [App\Http\Controllers\Api\SupplierController::class, 'destroy'])->middleware('auth:sanctum');
