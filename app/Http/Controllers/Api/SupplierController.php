@@ -99,6 +99,7 @@ class SupplierController extends Controller
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
+                'message' => 'Supplier created failed',
                 'error' => $th->getMessage(),
             ], 500);
         }

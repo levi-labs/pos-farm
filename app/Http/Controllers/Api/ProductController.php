@@ -1,0 +1,155 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Services\ProductService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class ProductController extends Controller
+{
+    protected $productService;
+
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+    }
+    public function index(): JsonResponse
+    {
+        try {
+            return response()->json([
+                'status' => true,
+                'message' => 'Products fetched successfully',
+                'data' => $this->productService->getAll(),
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Products fetched failed',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    public function show($id)
+    {
+        try {
+            $product = $this->productService->getById($id);
+            if ($product) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Product fetched successfully',
+                    'data' => $product,
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not found',
+                ], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product fetched failed',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = Validator::make($request->all(), [
+            'name' => 'required',
+            'price' => 'required',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'required',
+        ]);
+
+        if ($validated->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'error' => $validated->errors()->toArray(),
+            ], 422);
+        }
+
+        try {
+            return response()->json([
+                'status' => true,
+                'message' => 'Product created successfully',
+                'data' => $this->productService->create($request),
+            ]);
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Product created failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id): JsonResponse
+    {
+        $validated = Validator::make($request->all(), [
+            'name' => 'required',
+            'price' => 'required',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'required',
+        ]);
+
+        if ($validated->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'error' => $validated->errors()->toArray(),
+            ], 422);
+        }
+        try {
+            $product_data = $this->productService->update($request, $id);
+            if ($product_data) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Product updated successfully',
+                    'data' => $product_data
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not found'
+                ], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product updated failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $product_data = $this->productService->delete($id);
+            if ($product_data) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Product deleted successfully'
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Product not found'
+                ], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product deleted failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+}

@@ -22,3 +22,9 @@ Route::get('/suppliers/{id}', [App\Http\Controllers\Api\SupplierController::clas
 Route::post('/suppliers', [App\Http\Controllers\Api\SupplierController::class, 'store'])->middleware('auth:sanctum');
 Route::put('/suppliers/{id}', [App\Http\Controllers\Api\SupplierController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/suppliers/{id}', [App\Http\Controllers\Api\SupplierController::class, 'destroy'])->middleware('auth:sanctum');
+
+Route::get('/products', [App\Http\Controllers\Api\ProductController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/products/{id}', [App\Http\Controllers\Api\ProductController::class, 'show'])->middleware('auth:sanctum');
+Route::post('/products', [App\Http\Controllers\Api\ProductController::class, 'store'])->middleware('auth:sanctum');
+Route::put('/products/{id}', [App\Http\Controllers\Api\ProductController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/products/{id}', [App\Http\Controllers\Api\ProductController::class, 'destroy'])->middleware('auth:sanctum');
