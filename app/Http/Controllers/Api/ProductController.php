@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -59,9 +60,11 @@ class ProductController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+
         $validated = Validator::make($request->all(), [
             'name' => 'required',
             'price' => 'required',
+            'sku' => 'required|unique:products,sku',
             'category_id' => 'required|exists:categories,id',
             'description' => 'required',
         ]);
@@ -92,9 +95,12 @@ class ProductController extends Controller
 
     public function update(Request $request, $id): JsonResponse
     {
+        // for validation SKU must be unique and handle if same sku is passed
+
         $validated = Validator::make($request->all(), [
             'name' => 'required',
             'price' => 'required',
+            'sku' => 'required|unique:products,sku,' . $id,
             'category_id' => 'required|exists:categories,id',
             'description' => 'required',
         ]);
@@ -129,7 +135,7 @@ class ProductController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy($id): JsonResponse
     {
         try {
             $product_data = $this->productService->delete($id);
