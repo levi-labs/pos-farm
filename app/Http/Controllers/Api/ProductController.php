@@ -112,8 +112,9 @@ class ProductController extends Controller
                 'error' => $validated->errors()->toArray(),
             ], 422);
         }
+
         try {
-            $product_data = $this->productService->update($request, $id);
+            $product_data = $this->productService->update($validated->validated(), $id);
             if ($product_data) {
                 return response()->json([
                     'status' => true,

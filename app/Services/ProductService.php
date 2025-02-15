@@ -20,15 +20,15 @@ class ProductService
         return false;
     }
 
-    public function create(Request $request)
+    public function create($data)
     {
-        return Product::create($request->all());
+        return Product::create($data);
     }
-    public function update(Request $request, $id)
+    public function update($data, $id)
     {
         $product = Product::find($id);
         if ($product) {
-            $product->update($request->all());
+            $product->update($data);
             return $product;
         }
         return false;
