@@ -54,7 +54,6 @@ class SalesService
                     throw new \Exception("Stock not enough");
                 }
 
-
                 $createdSalesDetails[] = SalesDetail::create([
                     'sales_id' => $createdSales->id,
                     'product_id' => $product['product_id'],
@@ -63,10 +62,11 @@ class SalesService
                     'price_per_unit' => $product_detail->price,
                     'total_price' => $product_detail->price * $product['quantity']
                 ]);
+                $product_detail->decrement('quantity_in_stock', $product['quantity']);
             }
             // dd($createdSalesDetails);
 
-            // DB::commit();
+            DB::commit();
             return [
                 'sales' => $createdSales,
                 'sales_details' => $createdSalesDetails
