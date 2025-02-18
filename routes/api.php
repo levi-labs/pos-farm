@@ -34,3 +34,9 @@ Route::get('/customers/{id}', [App\Http\Controllers\Api\CustomerController::clas
 Route::post('/customers', [App\Http\Controllers\Api\CustomerController::class, 'store'])->middleware('auth:sanctum');
 Route::put('/customers/{id}', [App\Http\Controllers\Api\CustomerController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/customers/{id}', [App\Http\Controllers\Api\CustomerController::class, 'destroy'])->middleware('auth:sanctum');
+
+Route::get('/sales', [App\Http\Controllers\Api\SalesController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/sales/{id}', [App\Http\Controllers\Api\SalesController::class, 'show'])->middleware('auth:sanctum');
+Route::post('/sales', [App\Http\Controllers\Api\SalesController::class, 'store'])->middleware('auth:sanctum');
+Route::put('/sales/{id}', [App\Http\Controllers\Api\SalesController::class, 'update'])->middleware('auth:sanctum');
+Route::delete('/sales/{id}', [App\Http\Controllers\Api\SalesController::class, 'destroy'])->middleware('auth:sanctum');
