@@ -11,6 +11,14 @@ use Illuminate\Support\Collection;
 
 class SalesService
 {
+    protected $inventoryMovements;
+    protected $authUser;
+
+    public function __construct(InventoryMovementService $inventoryMovements)
+    {
+        $this->inventoryMovements = $inventoryMovements;
+        $this->authUser = Auth('sanctum')->user()->id;
+    }
     public function getAll(): Collection
     {
         return Sales::all();
@@ -63,9 +71,19 @@ class SalesService
                     'total_price' => $product_detail->price * $product['quantity']
                 ]);
                 $product_detail->decrement('quantity_in_stock', $product['quantity']);
+                $this->inventoryMovements->outStock([
+                    'product_id' => $product['product_id'],
+                    'movement_type' => 'out',
+                    'quantity' => $product['quantity'],
+                    'price_per_unit' => $product_detail->price,
+                    'total_price' => $product_detail->price * $product['quantity'],
+                    'reference' => "Sales-" . $createdSales->id,
+                    'created_by' => $this->authUser,
+                    'note' => $sales['note']
+                ]);
             }
-            // dd($createdSalesDetails);
 
+            // dd($createdSalesDetails);
             DB::commit();
             return [
                 'sales' => $createdSales,
