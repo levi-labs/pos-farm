@@ -70,24 +70,35 @@ class SalesService
                     'price_per_unit' => $product_detail->price,
                     'total_price' => $product_detail->price * $product['quantity']
                 ]);
-                $product_detail->decrement('quantity_in_stock', $product['quantity']);
-                $this->inventoryMovements->outStock([
+                $test = [
                     'product_id' => $product['product_id'],
                     'movement_type' => 'out',
                     'quantity' => $product['quantity'],
                     'price_per_unit' => $product_detail->price,
-                    'total_price' => $product_detail->price * $product['quantity'],
+                    'total_value' => $product_detail->price * $product['quantity'],
+                    'reference' => "Sales-" . $createdSales->id,
+                    'created_by' => $this->authUser,
+                    'note' => $sales['note']
+                ];
+                $product_detail->decrement('quantity_in_stock', $product['quantity']);
+                $this->inventoryMovements->create([
+                    'product_id' => $product['product_id'],
+                    'movement_type' => 'out',
+                    'quantity' => $product['quantity'],
+                    'price_per_unit' => $product_detail->price,
+                    'total_value' => $product_detail->price * $product['quantity'],
                     'reference' => "Sales-" . $createdSales->id,
                     'created_by' => $this->authUser,
                     'note' => $sales['note']
                 ]);
             }
 
-            // dd($createdSalesDetails);
-            DB::commit();
+            // DB::commit();
             return [
                 'sales' => $createdSales,
-                'sales_details' => $createdSalesDetails
+                'sales_details' => $createdSalesDetails,
+                'movement' => $test
+
             ];
         } catch (\Throwable $th) {
             DB::rollBack();

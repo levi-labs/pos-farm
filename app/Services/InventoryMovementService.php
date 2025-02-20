@@ -6,12 +6,7 @@ use App\Models\InventoryMovement;
 
 class InventoryMovementService
 {
-    public function outStock(array $data)
-    {
-        return InventoryMovement::create($data);
-    }
-
-    public function inStock(array $data)
+    public function create(array $data)
     {
         return InventoryMovement::create($data);
     }
