@@ -203,8 +203,51 @@ class SalesService
         }
     }
 
-    public function delete($id): bool
+    public function delete($id): array
     {
-        return Sales::where('id', $id)->delete();
+        DB::beginTransaction();
+        try {
+            $sales = Sales::where('id', $id)->first();
+            if ($sales) {
+
+                $salesDetails = SalesDetail::where('sales_id', $id)->get();
+                $updateHistoryInventoryMovement = [];
+                foreach ($salesDetails as $salesDetail) {
+                    $product = Product::where('id', $salesDetail->product_id)->first();
+                    $inventory_movement = InventoryMovement::where('product_id', $salesDetail->product_id)
+                        ->where('reference', "Sales-" . $id)
+                        ->first();
+                    //create history inventory movement cancel stock
+                    $updateHistoryInventoryMovement[] = InventoryMovement::create([
+                        'product_id' => $salesDetail->product_id,
+                        'movement_type' => $inventory_movement->movement_type == 'out' ? 'in' : 'out',
+                        'quantity' => $salesDetail->quantity,
+                        'price_per_unit' => $salesDetail->price_per_unit,
+                        'total_value' => $salesDetail->total_price,
+                        'reference' => "Cancel Sales-" . $id,
+                        'created_by' => $this->authUser,
+                        'note' => "Cancellation of sales transaction #" . $id
+                    ]);
+
+                    $product->increment('quantity_in_stock', $salesDetail->quantity);
+                }
+                $sales->update([
+                    'status' => 'cancelled',
+                    'payment_status' => 'unpaid'
+                ]);
+
+                DB::commit();
+
+                return [
+                    'sales' => $sales,
+                    'inventory_movement' => $updateHistoryInventoryMovement
+                ];
+            } else {
+                throw new \Exception("Sales not found");
+            }
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
+        }
     }
 }
