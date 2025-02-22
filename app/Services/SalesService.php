@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\InventoryMovement;
 use App\Models\Product;
 use App\Models\Sales;
 use App\Models\SalesDetail;
@@ -98,65 +99,104 @@ class SalesService
 
     public function update($id, $sales): array
     {
+        $updatedSales = Sales::where('id', $id)->first();
+
         DB::beginTransaction();
         try {
-            $createdSales = Sales::where('id', $id)->first();
-            $createdSales->update([
-                'customer_id' => $sales['customer_id'] ?? $createdSales['customer_id'],
-                'total_amount' => $sales['total_amount'] ?? $createdSales['total_amount'],
-                'total_discount' => $sales['total_discount'] ?? $createdSales['total_discount'],
-                'payment_status' => $sales['payment_status'] ?? $createdSales['payment_status'],
-                'status' => $sales['status'] ?? $createdSales['status'],
-                'payment_method' => $sales['payment_method'] ?? $createdSales['payment_method'],
-                'note' => $sales['note'] ?? $createdSales['note'],
-            ]);
-            $createdSalesDetails = [];
-
-            foreach ($sales['products'] as $product) {
-                $product_detail = Product::where('id', $product['product_id'])->first();
-                if ($product['quantity'] <= 0) {
-                    continue;
-                }
-
-                if ($product['quantity'] > $product_detail->quantity_in_stock) {
-                    throw new \Exception("Stock not enough");
-                }
-
-                if (SalesDetail::where('sales_id', $id)->where('id', $product['detail_id'])->first()) {
-                    $createdSalesDetails[] = SalesDetail::where('sales_id', $id)->where('id', $product['detail_id'])->first()->update([
-                        'product_id' => $product['product_id'] ?? $createdSalesDetails['product_id'],
-                        'quantity' => $product['quantity'] ?? $createdSalesDetails['quantity'],
-                        'discount' => $product['discount'] ?? $createdSalesDetails['discount'],
-                        'price_per_unit' => $product_detail->price,
-                        'total_price' => $product_detail->price * $product['quantity']
-                    ]);
-                } else {
-                    $createdSalesDetails[] = SalesDetail::create([
-                        'sales_id' => $id,
-                        'product_id' => $product['product_id'],
-                        'quantity' => $product['quantity'],
-                        'discount' => $product['discount'],
-                        'price_per_unit' => $product_detail->price,
-                        'total_price' => $product_detail->price * $product['quantity'],
-                    ]);
-                }
-
-                $this->inventoryMovements->create([
-                    'product_id' => $product['product_id'],
-                    'movement_type' => 'out',
-                    'quantity' => $product['quantity'],
-                    'price_per_unit' => $product_detail->price,
-                    'total_value' => $product_detail->price * $product['quantity'],
-                    'reference' => "Sales-" . $createdSales->id,
-                    'created_by' => $this->authUser,
-                    'note' => $sales['note']
+            if ($updatedSales) {
+                $updatedSales->update([
+                    'customer_id' => $sales['customer_id'] ?? $updatedSales['customer_id'],
+                    'total_amount' => $sales['total_amount'] ?? $updatedSales['total_amount'],
+                    'total_discount' => $sales['total_discount'] ?? $updatedSales['total_discount'],
+                    'payment_status' => $sales['payment_status'] ?? $updatedSales['payment_status'],
+                    'status' => $sales['status'] ?? $updatedSales['status'],
+                    'payment_method' => $sales['payment_method'] ?? $updatedSales['payment_method'],
+                    'note' => $sales['note'] ?? $updatedSales['note'],
                 ]);
+
+                $updatedInventoryMovements = [];
+                $updatedSalesDetails = [];
+                foreach ($sales['products'] as $key => $product) {
+                    $salesDetail = SalesDetail::where('sales_id', $id)
+                        ->where('product_id', $product['product_id'])
+                        ->first();
+
+                    $product_detail = Product::where('id', $product['product_id'])->first();
+
+                    $inventoryMovement = InventoryMovement::where('product_id', $product['product_id'])
+                        ->where('reference', "Sales-" . $id)
+                        ->first();
+
+                    if ($product['quantity'] <= 0) {
+                        continue;
+                    }
+
+                    if ($product['quantity'] > $product_detail->quantity_in_stock) {
+                        throw new \Exception("Stock not enough");
+                    }
+
+                    if ($salesDetail) {
+                        $stock = $product_detail->quantity_in_stock + $salesDetail->quantity;
+
+                        $salesDetail->update([
+                            'product_id' => $product['product_id'] ?? $salesDetail['product_id'],
+                            'quantity' => $product['quantity'] ?? $salesDetail['quantity'],
+                            'discount' => $product['discount'] ?? $salesDetail['discount'],
+                            'price_per_unit' => $product_detail->price,
+                            'total_price' => $product_detail->price * $product['quantity']
+                        ]);
+
+                        $product_detail->update([
+                            'quantity_in_stock' => $stock - $product['quantity'],
+                        ]);
+
+                        $updatedInventory = $inventoryMovement->update([
+                            'quantity' => $product['quantity'],
+                            'price_per_unit' => $product_detail->price,
+                            'total_value' => $product_detail->price * $product['quantity'],
+                        ]);
+
+                        $updatedSalesDetails[] = $salesDetail;
+                        $updatedInventoryMovements[] = $updatedInventory;
+                    } else {
+
+                        $newSalesDetail = SalesDetail::create([
+                            'sales_id' => $id,
+                            'product_id' => $product['product_id'],
+                            'quantity' => $product['quantity'],
+                            'discount' => $product['discount'],
+                            'price_per_unit' => $product_detail->price,
+                            'total_price' => $product_detail->price * $product['quantity'],
+                        ]);
+
+
+                        $product_detail->decrement('quantity_in_stock', $product['quantity']);
+
+                        $createNewMovement = $this->inventoryMovements->create([
+                            'product_id' => $product['product_id'],
+                            'movement_type' => 'out',
+                            'quantity' => $product['quantity'],
+                            'price_per_unit' => $product_detail->price,
+                            'total_value' => $product_detail->price * $product['quantity'],
+                            'reference' => "Sales-" . $updatedSales->id,
+                            'created_by' => $this->authUser,
+                            'note' => $sales['note']
+                        ]);
+
+                        $updatedSalesDetails[] = $newSalesDetail;
+                        $updatedInventoryMovements[] = $createNewMovement;
+                    }
+                }
+                DB::commit();
+                return [
+                    'sales' => $updatedSales,
+                    'sales_details' => $updatedSalesDetails,
+                    'inventory_movements' => $updatedInventoryMovements
+
+                ];
+            } else {
+                throw new \Exception("Sales not found");
             }
-            DB::commit();
-            return [
-                'sales' => $createdSales,
-                'sales_details' => $createdSalesDetails
-            ];
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;

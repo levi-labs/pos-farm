@@ -86,4 +86,52 @@ class SalesController extends Controller
             ], 500);
         }
     }
+
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'customer_id' => 'nullable|exists:customers,id',
+            'total_discount' => 'required',
+            'payment_method' => 'required',
+            'payment_status' => 'required',
+            'total_amount' => 'required',
+            'status' => 'required',
+            'note' => 'nullable|string',
+            'products' => 'required|array',
+            'products.*.id' => 'nullable|exists:sales_details,id',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required',
+            'products.*.discount' => 'nullable|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'error' => $validator->errors()->toArray(),
+            ], 422);
+        }
+
+        try {
+            $sales = $this->salesService->update($id, $validator->validated());
+
+            if ($sales) {
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Sales updated successfully',
+                    'data' => $sales,
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Sales not found',
+                ], 404);
+            }
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
 }

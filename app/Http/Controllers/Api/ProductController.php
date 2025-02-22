@@ -81,7 +81,7 @@ class ProductController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Product created successfully',
-                'data' => $this->productService->create($request),
+                'data' => $this->productService->create($validated->validated()),
             ]);
         } catch (\Exception $e) {
 
