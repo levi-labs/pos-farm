@@ -150,12 +150,12 @@ class SalesService
                             'quantity_in_stock' => $stock - $product['quantity'],
                         ]);
 
-                        $updatedInventory = $inventoryMovement->update([
+                        $inventoryMovement->update([
                             'quantity' => $product['quantity'],
                             'price_per_unit' => $product_detail->price,
                             'total_value' => $product_detail->price * $product['quantity'],
                         ]);
-
+                        $updatedInventory = $inventoryMovement->fresh();
                         $updatedSalesDetails[] = $salesDetail;
                         $updatedInventoryMovements[] = $updatedInventory;
                     } else {
