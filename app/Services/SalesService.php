@@ -34,7 +34,7 @@ class SalesService
                 'sales_details' => $salesDetail
             ];
         }
-        return null;
+        return false;
     }
 
     public function create($sales): array
@@ -93,7 +93,7 @@ class SalesService
             ];
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th;
+            throw $th->getMessage();
         }
     }
 
@@ -199,7 +199,7 @@ class SalesService
             }
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th;
+            throw $th->getMessage();
         }
     }
 
@@ -247,7 +247,7 @@ class SalesService
             }
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th;
+            throw $th->getMessage();
         }
     }
 }
