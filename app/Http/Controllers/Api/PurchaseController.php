@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\PurchaseService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PurchaseController extends Controller
@@ -29,6 +30,33 @@ class PurchaseController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $data = $this->purchaseService->getById($id);
+            if ($data) {
+                Log::info('Purchase fetched successfully', ['data' => $data]);
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Purchase fetched successfully',
+                    'data' => $data
+                ], 200);
+            } else {
+                Log::warning('Purchase Not Found', ['id' => $id]);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Purchase Not Found',
+                ], 404);
+            }
+        } catch (\Throwable $th) {
+            Log::error('Purchase fetch failed' . $th->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch purchase data. Please try again later.',
             ], 500);
         }
     }
