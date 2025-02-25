@@ -101,31 +101,35 @@ class PurchaseService
             DB::beginTransaction();
 
             $purchase = Purchase::find($id);
+
             $newPurchaseDetails = [];
+
             if ($purchase) {
                 foreach ($data['products'] as $product) {
+                    $purchaseDetail = $purchase->purchaseDetails()->where('product_id', $product['product_id'])->first();
                     $product_detail = Product::where('id', $product['product_id'])->first();
+                    $stock = $product_detail->quantity_in_stock + $purchaseDetail->quantity;
+
                     if ($product['quantity'] <= 0) {
                         continue;
                     }
-                    if ($product['quantity'] > $product_detail['quantity_in_stock']) {
+
+                    if ($product['quantity'] > $stock) {
                         throw new \Exception("Stock not enough");
                     }
 
-                    $purchaseDetail = $purchase->purchaseDetails()->where('product_id', $product['product_id'])->first();
+
                     if ($purchaseDetail) {
+
                         $newPurchaseDetails[] = [
                             'product_id' => $product['product_id'],
                             'quantity' => $product['quantity'],
-                            'discount' => $product['discount'],
                         ];
-
-                        $stock = $product_detail->quantity_in_stock + $purchaseDetail->quantity;
 
                         $purchaseDetail->update([
                             'quantity' => $product['quantity'],
-                            'discount' => $product['discount'],
                         ]);
+
                         $product_detail->update([
                             'quantity_in_stock' => $stock - $product['quantity'],
                         ]);
@@ -133,7 +137,6 @@ class PurchaseService
                         $newPurchaseDetails[] = [
                             'product_id' => $product['product_id'],
                             'quantity' => $product['quantity'],
-                            'discount' => $product['discount'],
                         ];
 
                         $product_detail->decrement('quantity_in_stock', $product['quantity']);
@@ -141,11 +144,10 @@ class PurchaseService
                         $purchase->purchaseDetails()->create([
                             'product_id' => $product['product_id'],
                             'quantity' => $product['quantity'],
-                            'discount' => $product['discount'],
                         ]);
                     }
                 }
-                DB::commit();
+
 
                 return [
                     'purchases' => $purchase,
@@ -155,7 +157,7 @@ class PurchaseService
             return false;
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th->getMessage();
+            throw $th;
         }
     }
 

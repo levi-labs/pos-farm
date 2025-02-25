@@ -92,4 +92,44 @@ class PurchaseController extends Controller
             'data' => $data,
         ], 201);
     }
+
+    public function update(Request $request, $id)
+    {
+        $validated = Validator::make($request->all(), [
+            'supplier_id' => 'required|exists:suppliers,id',
+            'total_discount' => 'required',
+            'payment_method' => 'required',
+            'payment_status' => 'required',
+            'status' => 'required',
+            'note' => 'nullable|string',
+            'products' => 'required|array',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required|numeric|min:1',
+        ]);
+
+        if ($validated->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'error' => $validated->errors()->toArray(),
+            ], 422);
+        }
+
+
+        try {
+            $data = $this->purchaseService->update($validated->validated(), $id);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Purchase updated successfully',
+                'data' => $data,
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to update purchase. Please try again later.',
+                'error' => $th->getMessage(),
+            ], 500);
+        }
+    }
 }
