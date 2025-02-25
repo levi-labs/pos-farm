@@ -15,16 +15,29 @@ class PurchaseController extends Controller
         $this->purchaseService = $purchaseService;
     }
 
+    public function index()
+    {
+        $data = $this->purchaseService->getAll();
+        return response()->json([
+            'status' => true,
+            'message' => 'Purchases fetched successfully',
+            'data' => $data
+        ], 200);
+    }
+
     public function store(Request $request)
     {
         $validated = Validator::make($request->all(), [
-            'customer_id' => 'required|exists:customers,id',
+            'supplier_id' => 'required|exists:suppliers,id',
             'total_discount' => 'required',
             'payment_method' => 'required',
             'payment_status' => 'required',
-            'total_amount' => 'required',
             'status' => 'required',
             'note' => 'nullable|string',
+            'products' => 'required|array',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required|numeric|min:1',
+            'products.*.discount' => 'nullable|numeric',
         ]);
 
         if ($validated->fails()) {
@@ -35,12 +48,12 @@ class PurchaseController extends Controller
             ], 422);
         }
 
-        // $this->purchaseService->store($request->all());
+        $data = $this->purchaseService->create($validated->validated());
 
         return response()->json([
             'status' => true,
             'message' => 'Purchase created successfully',
-            'data' => null,
+            'data' => $data,
         ], 201);
     }
 }

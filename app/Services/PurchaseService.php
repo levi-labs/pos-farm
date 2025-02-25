@@ -18,6 +18,22 @@ class PurchaseService
         $this->cartService = $cartService;
         $this->authUser = Auth('sanctum')->user()->id;
     }
+    public function getAll()
+    {
+        return Purchase::with('supplier:id,name')->get();
+    }
+    public function getById($id)
+    {
+        $data = Purchase::find($id);
+        if ($data) {
+            $purchaseDetails = $data->purchaseDetails()->with('product:id,name')->get();
+            return [
+                'purchases' => $data,
+                'purchases_details' => $purchaseDetails
+            ];
+        }
+        return false;
+    }
     public function create(array $data)
     {
 
@@ -26,13 +42,9 @@ class PurchaseService
             if (empty($data)) {
                 throw new \Exception("No data found");
             }
+            $reference_number = format_reference_number('purchase');
 
-            $newPurchase = Purchase::create([
-                'supplier_id' => $data['supplier_id'],
-                'reference_number' => $data['reference_number'],
-                'total_amount' => $data['total_amount'],
-                'status' => $data['status'],
-            ]);
+            $total_amount = 0;
 
             $newPurchaseDetails = [];
             foreach ($data['products'] as $product) {
@@ -44,29 +56,36 @@ class PurchaseService
                 if ($product['quantity'] > $product_detail->quantity_in_stock) {
                     throw new \Exception("Stock not enough");
                 }
+                $subtotal = $product['quantity'] * $product_detail->price;
 
                 $newPurchaseDetails[] = [
-                    'purchase_id' => $newPurchase->id,
                     'product_id' => $product['product_id'],
                     'quantity' => $product['quantity'],
                     'discount' => $product['discount'],
+                    'price_per_unit' => $product_detail->price,
+                    'total_price' => $subtotal
                 ];
-                $cart = $this->cartService->addToCart([
-                    'quantity' => $product['quantity'],
-                    'product_id' => $product['product_id'],
-                ]);
+                $total_amount += $subtotal;
+
+                $product_detail->quantity_in_stock = $product_detail->quantity_in_stock - $product['quantity'];
+                $product_detail->update();
             }
+            $newPurchase = Purchase::create([
+                'supplier_id' => $data['supplier_id'],
+                'reference_number' => $reference_number,
+                'total_amount' => $total_amount,
+                'status' => $data['status'],
+            ]);
             $newPurchase->purchaseDetails()->createMany($newPurchaseDetails);
             DB::commit();
 
             return [
-                'purchases' => $newPurchase,
-                'purchases_details' => $newPurchaseDetails,
-                'cart' => $cart
+                'purchase' => $newPurchase,
+                'purchase_details' => $newPurchaseDetails
             ];
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th->getMessage();
+            throw $th;
         }
     }
 
