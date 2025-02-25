@@ -20,7 +20,13 @@ class PurchaseService
     }
     public function getAll()
     {
-        return Purchase::with('supplier:id,name')->get();
+        $data = Purchase::with([
+            'supplier:id,name',
+            'purchaseDetails:purchase_id,quantity,product_id',
+            'purchaseDetails.product:id,name'
+        ])->get();
+
+        return $data;
     }
     public function getById($id)
     {
