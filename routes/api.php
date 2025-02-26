@@ -48,6 +48,7 @@ Route::put('/carts/{id}', [App\Http\Controllers\Api\CartController::class, 'upda
 Route::delete('/carts/{id}', [App\Http\Controllers\Api\CartController::class, 'destroy'])->middleware('auth:sanctum');
 
 Route::get('/purchases', [App\Http\Controllers\Api\PurchaseController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/search/purchases', [App\Http\Controllers\Api\PurchaseController::class, 'search']);
 Route::get('/purchases/{id}', [App\Http\Controllers\Api\PurchaseController::class, 'show'])->middleware('auth:sanctum');
 Route::post('/purchases', [App\Http\Controllers\Api\PurchaseController::class, 'store'])->middleware('auth:sanctum');
 Route::put('/purchases/{id}', [App\Http\Controllers\Api\PurchaseController::class, 'update'])->middleware('auth:sanctum');

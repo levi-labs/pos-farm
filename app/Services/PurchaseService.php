@@ -40,6 +40,36 @@ class PurchaseService
         }
         return false;
     }
+
+    public function search($query)
+    {
+        $purchases = Purchase::query();
+
+        if ($query['reference_number']) {
+            $purchases->where('reference_number', 'like', '%' . $query['reference_number'] . '%');
+        }
+
+        if ($query['supplier_name']) {
+            $purchases->whereHas('supplier', function ($q) use ($query) {
+                $q->where('name', 'like', '%' . $query['supplier_name'] . '%');
+            });
+        }
+
+        if ($query['from_date'] && $query['to_date']) {
+            $purchases->whereBetween('created_at', [$query['from_date'], $query['to_date']]);
+        }
+
+        if ($query['status']) {
+            $purchases->where('status', $query['status']);
+        }
+
+        if ($query['total_amount']) {
+            $purchases->where('total_amount', $query['total_amount']);
+        }
+
+
+        return $purchases->paginate(10);
+    }
     public function create(array $data)
     {
 
