@@ -11,6 +11,22 @@ class ProductService
     {
         return Product::all();
     }
+
+    public function search($query)
+    {
+        $query = Product::query();
+
+        if ($query['name']) {
+            $query->where('name', 'like', '%' . $query['name'] . '%');
+        }
+        if ($query['category']) {
+            $query->whereHas('category', function ($q) use ($query) {
+                $q->where('name', 'like', '%' . $query['category'] . '%');
+            });
+        }
+
+        return $query->paginate(10);
+    }
     public function getById($id)
     {
         $product = Product::find($id);

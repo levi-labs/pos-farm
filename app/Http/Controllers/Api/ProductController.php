@@ -33,6 +33,34 @@ class ProductController extends Controller
             ], 500);
         }
     }
+    public function search(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'category' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation failed',
+                'error' => $validator->errors()->toArray(),
+            ], 422);
+        }
+        try {
+            return response()->json([
+                'status' => true,
+                'message' => 'Products fetched successfully',
+                'data' => $this->productService->search($validator->validated()),
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Products fetched failed',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
     public function show($id)
     {
         try {
