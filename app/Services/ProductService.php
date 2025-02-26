@@ -12,16 +12,16 @@ class ProductService
         return Product::all();
     }
 
-    public function search($query)
+    public function search($params)
     {
         $query = Product::query();
 
-        if ($query['name']) {
-            $query->where('name', 'like', '%' . $query['name'] . '%');
+        if ($params['name']) {
+            $query->where('name', 'like', '%' . $params['name'] . '%');
         }
-        if ($query['category']) {
-            $query->whereHas('category', function ($q) use ($query) {
-                $q->where('name', 'like', '%' . $query['category'] . '%');
+        if ($params['category']) {
+            $query->whereHas('category', function ($q) use ($params) {
+                $q->where('name', 'like', '%' . $params['category'] . '%');
             });
         }
 
